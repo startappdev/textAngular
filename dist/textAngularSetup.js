@@ -53,7 +53,7 @@ var taTools = {};
 					the action that should be executed if the onElementSelect function runs
 */
 // name and toolDefinition to add into the tools available to be added on the toolbar
-function registerTextAngularTool(name, toolDefinition){
+/*function registerTextAngularTool(name, toolDefinition){
 	if(!name || name === '' || taTools.hasOwnProperty(name)) throw('textAngular Error: A unique name is required for a Tool Definition');
 	if(
 		(toolDefinition.display && (toolDefinition.display === '' || !validElementString(toolDefinition.display))) ||
@@ -62,6 +62,18 @@ function registerTextAngularTool(name, toolDefinition){
 		throw('textAngular Error: Tool Definition for "' + name + '" does not have a valid display/iconclass/buttontext value');
 	taTools[name] = toolDefinition;
 }
+*/
+
+function registerTextAngularTool(name, toolDefinition){
+	if(name && name !== '' && !taTools.hasOwnProperty(name)) {
+		if ((toolDefinition.display && (toolDefinition.display === '' || !validElementString(toolDefinition.display))) ||
+			(!toolDefinition.display && !toolDefinition.buttontext && !toolDefinition.iconclass)
+		)
+			throw('textAngular Error: Tool Definition for "' + name + '" does not have a valid display/iconclass/buttontext value');
+		taTools[name] = toolDefinition;
+	}
+}
+
 
 angular.module('textAngularSetup', [])
 .constant('taRegisterTool', registerTextAngularTool)
