@@ -647,9 +647,9 @@ angular.module('textAngular.DOM', ['textAngular.factories'])
 					if(_selection.collapsed){
 						// insert text at selection, then select then just let normal exec-command run
 						taSelection.insertHtml(tagBegin + options + tagEnd, topNode);
-					}else if(rangy.getSelection().getRangeAt(0).canSurroundContents()){
+					}else if(window.rangy.getSelection().getRangeAt(0).canSurroundContents()){
 						var node = angular.element(tagBegin + tagEnd)[0];
-						rangy.getSelection().getRangeAt(0).surroundContents(node);
+						window.rangy.getSelection().getRangeAt(0).surroundContents(node);
 					}
 					return;
 				}else if(command.toLowerCase() === 'inserthtml'){
@@ -667,7 +667,7 @@ angular.module('textAngular.DOM', ['textAngular.factories'])
 function($window, $document, taDOM){
 	// need to dereference the document else the calls don't work correctly
 	var _document = $document[0];
-	var rangy = $window.rangy;
+	//var rangy = $window.rangy;
 	var brException = function (element, offset) {
 		/* check if selection is a BR element at the beginning of a container. If so, get
 		* the parentNode instead.
@@ -688,7 +688,7 @@ function($window, $document, taDOM){
 	};
 	var api = {
 		getSelection: function(){
-			var range = rangy.getSelection().getRangeAt(0);
+			var range = window.rangy.getSelection().getRangeAt(0);
 			var container = range.commonAncestorContainer;
 			var selection = {
 				start: brException(range.startContainer, range.startOffset),
@@ -706,7 +706,7 @@ function($window, $document, taDOM){
 			return selection;
 		},
 		getOnlySelectedElements: function(){
-			var range = rangy.getSelection().getRangeAt(0);
+			var range = window.rangy.getSelection().getRangeAt(0);
 			var container = range.commonAncestorContainer;
 			// Check if the container is a text node and return its parent if so
 			container = container.nodeType === 3 ? container.parentNode : container;
@@ -719,57 +719,57 @@ function($window, $document, taDOM){
 			return api.getSelection().container;
 		},
 		setSelection: function(el, start, end){
-			var range = rangy.createRange();
-			
+			var range = window.rangy.createRange();
+
 			range.setStart(el, start);
 			range.setEnd(el, end);
-			
-			rangy.getSelection().setSingleRange(range);
+
+			window.rangy.getSelection().setSingleRange(range);
 		},
 		setSelectionBeforeElement: function (el){
-			var range = rangy.createRange();
-			
+			var range = window.rangy.createRange();
+
 			range.selectNode(el);
 			range.collapse(true);
-			
-			rangy.getSelection().setSingleRange(range);
+
+			window.rangy.getSelection().setSingleRange(range);
 		},
 		setSelectionAfterElement: function (el){
-			var range = rangy.createRange();
-			
+			var range = window.rangy.createRange();
+
 			range.selectNode(el);
 			range.collapse(false);
-			
-			rangy.getSelection().setSingleRange(range);
+
+			window.rangy.getSelection().setSingleRange(range);
 		},
 		setSelectionToElementStart: function (el){
-			var range = rangy.createRange();
-			
+			var range = window.rangy.createRange();
+
 			range.selectNodeContents(el);
 			range.collapse(true);
-			
-			rangy.getSelection().setSingleRange(range);
+
+			window.rangy.getSelection().setSingleRange(range);
 		},
 		setSelectionToElementEnd: function (el){
-			var range = rangy.createRange();
-			
+			var range = window.rangy.createRange();
+
 			range.selectNodeContents(el);
 			range.collapse(false);
 			if(el.childNodes && el.childNodes[el.childNodes.length - 1] && el.childNodes[el.childNodes.length - 1].nodeName === 'br'){
 				range.startOffset = range.endOffset = range.startOffset - 1;
 			}
-			rangy.getSelection().setSingleRange(range);
+			window.rangy.getSelection().setSingleRange(range);
 		},
 		// from http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div
 		// topNode is the contenteditable normally, all manipulation MUST be inside this.
 		insertHtml: function(html, topNode){
 			var parent, secondParent, _childI, nodes, i, lastNode, _tempFrag;
 			var element = angular.element("<div>" + html + "</div>");
-			var range = rangy.getSelection().getRangeAt(0);
+			var range = window.rangy.getSelection().getRangeAt(0);
 			var frag = _document.createDocumentFragment();
 			var children = element[0].childNodes;
 			var isInline = true;
-			
+
 			if(children.length > 0){
 				// NOTE!! We need to do the following:
 				// check for blockelements - if they exist then we have to split the current element in half (and all others up to the closest block element) and insert all children in-between.
@@ -791,7 +791,7 @@ function($window, $document, taDOM){
 				// paste text of some sort
 				lastNode = frag = _document.createTextNode(html);
 			}
-			
+
 			// Other Edge case - selected data spans multiple blocks.
 			if(isInline){
 				range.deleteContents();
@@ -816,7 +816,7 @@ function($window, $document, taDOM){
 							secondParent = parent.cloneNode();
 							// split the nodes into two lists - before and after, splitting the node with the selection into 2 text nodes.
 							taDOM.splitNodes(parent.childNodes, parent, secondParent, range.startContainer, range.startOffset);
-							
+
 							// Escape out of the inline tags like b
 							while(!VALIDELEMENTS.test(parent.nodeName)){
 								angular.element(parent).after(secondParent);
@@ -831,12 +831,12 @@ function($window, $document, taDOM){
 							secondParent = parent.cloneNode();
 							taDOM.splitNodes(parent.childNodes, parent, secondParent, undefined, undefined, range.startOffset);
 						}
-						
+
 						angular.element(parent).after(secondParent);
 						// put cursor to end of inserted content
 						range.setStartAfter(parent);
 						range.setEndAfter(parent);
-						
+
 						if(/^(|<br(|\/)>)$/i.test(parent.innerHTML.trim())){
 							range.setStartBefore(parent);
 							range.setEndBefore(parent);
@@ -862,7 +862,7 @@ function($window, $document, taDOM){
 					range.deleteContents();
 				}
 			}
-			
+
 			range.insertNode(frag);
 			if(lastNode){
 				api.setSelectionToElementEnd(lastNode);
@@ -884,35 +884,35 @@ function($window, $document, taDOM){
 			if(element.attr(attribute) !== undefined) resultingElements.push(element);
 			return resultingElements;
 		},
-		
+
 		transferChildNodes: function(source, target){
 			// clear out target
 			target.innerHTML = '';
 			while(source.childNodes.length > 0) target.appendChild(source.childNodes[0]);
 			return target;
 		},
-		
+
 		splitNodes: function(nodes, target1, target2, splitNode, subSplitIndex, splitIndex){
 			if(!splitNode && isNaN(splitIndex)) throw new Error('taDOM.splitNodes requires a splitNode or splitIndex');
 			var startNodes = document.createDocumentFragment();
 			var endNodes = document.createDocumentFragment();
 			var index = 0;
-			
+
 			while(nodes.length > 0 && (isNaN(splitIndex) || splitIndex !== index) && nodes[0] !== splitNode){
 				startNodes.appendChild(nodes[0]); // this removes from the nodes array (if proper childNodes object.
 				index++;
 			}
-			
+
 			if(!isNaN(subSplitIndex) && subSplitIndex >= 0 && nodes[0]){
 				startNodes.appendChild(document.createTextNode(nodes[0].nodeValue.substring(0, subSplitIndex)));
 				nodes[0].nodeValue = nodes[0].nodeValue.substring(subSplitIndex);
 			}
 			while(nodes.length > 0) endNodes.appendChild(nodes[0]);
-			
+
 			taDOM.transferChildNodes(startNodes, target1);
 			taDOM.transferChildNodes(endNodes, target2);
 		},
-		
+
 		transferNodeAttributes: function(source, target){
 			for(var i = 0; i < source.attributes.length; i++) target.setAttribute(source.attributes[i].name, source.attributes[i].value);
 			return target;
